@@ -1,0 +1,57 @@
+{
+  "agents": {
+    "claude-code": {
+      "name": "Claude Code",
+      "enabled": true,
+      "command": "claude",
+      "args": ["--dangerously-skip-permissions"],
+      "description": "Anthropic's autonomous coding agent",
+      "envRequired": ["ANTHROPIC_API_KEY"],
+      "features": {
+        "parallelExecution": true,
+        "autonomousMode": true,
+        "gitIntegration": true,
+        "mcpSupport": true
+      }
+    },
+    "gemini-cli": {
+      "name": "Gemini CLI",
+      "enabled": true,
+      "command": "gemini",
+      "args": ["--yolo"],
+      "description": "Google's Gemini coding agent",
+      "envRequired": ["GOOGLE_API_KEY"],
+      "features": {
+        "parallelExecution": true,
+        "autonomousMode": true,
+        "gitIntegration": true
+      }
+    },
+    "openai-codex": {
+      "name": "OpenAI Codex",
+      "enabled": true,
+      "command": "codex",
+      "args": ["--approval-mode", "full-auto"],
+      "description": "OpenAI's Codex coding agent",
+      "envRequired": ["OPENAI_API_KEY"],
+      "features": {
+        "parallelExecution": true,
+        "autonomousMode": true,
+        "gitIntegration": true
+      }
+    }
+  },
+  "defaults": {
+    "preferredAgent": "claude-code",
+    "parallelLimit": 4,
+    "autoCreatePR": true,
+    "worktreeEnabled": true,
+    "worktreeCleanupHours": 24
+  },
+  "remote": {
+    "sshEnabled": true,
+    "sshHost": "",
+    "sshUser": "",
+    "editorUrlScheme": "vscode://vscode-remote/ssh-remote+"
+  }
+}

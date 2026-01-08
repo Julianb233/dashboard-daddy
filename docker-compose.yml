@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Vibe Kanban - Autonomous Agent Orchestrator
+  vibe-kanban:
+    image: node:22-slim
+    container_name: dashboard-daddy
+    working_dir: /app
+    volumes:
+      - vibe-data:/app/data
+      - repos:/repos
+      - ./config:/app/config
+      # Mount host Docker socket for agent execution
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount SSH keys for Git operations
+      - ~/.ssh:/root/.ssh:ro
+      # Mount Claude Code config
+      - ~/.claude:/root/.claude:ro
+      # Mount Anthropic API key
+      - ~/.anthropic:/root/.anthropic:ro
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NODE_ENV=production
+      # Agent API Keys (loaded from .env)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    ports:
+      - "127.0.0.1:3000:3000"  # Only localhost - Cloudflare handles external
+    command: >
+      sh -c "
+        npm install -g pnpm vibe-kanban &&
+        vibe-kanban
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - dashboard-net
+
+  # Cloudflare Tunnel - Secure External Access
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: dashboard-daddy-tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      vibe-kanban:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dashboard-net
+
+networks:
+  dashboard-net:
+    driver: bridge
+
+volumes:
+  vibe-data:
+    driver: local
+  repos:
+    driver: local
