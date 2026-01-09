@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     working_dir: /data
     command: sh -lc "HOST=0.0.0.0 PORT=3000 npx -y vibe-kanban"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - vibe_kanban_data:/data
       # optional: mount where your git repos live on the VPS
