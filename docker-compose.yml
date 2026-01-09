@@ -8,8 +8,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - vibe_kanban_data:/data
-      # optional: mount where your git repos live on the VPS
-      # - /srv/repos:/srv/repos
+      - /root/github-repos:/home/vibe/repos
     networks:
       - root_default
     labels:
