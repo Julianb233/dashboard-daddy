@@ -27,7 +27,7 @@ services:
       sh -lc "
         apk add --no-cache bash tmux nodejs npm git ttyd &&
         npm i -g @anthropic-ai/claude-code &&
-        ttyd -p 7681 -i 0.0.0.0 bash -lc 'tmux attach -t main || tmux new -s main'
+        ttyd -W -p 7681 -i 0.0.0.0 bash -lc 'tmux attach -t main || tmux new -s main'
       "
 
     # Persist your home folder so Claude auth + configs survive restarts
