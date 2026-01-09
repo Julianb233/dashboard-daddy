@@ -1,68 +1,25 @@
-version: '3.8'
-
 services:
-  # Vibe Kanban - Autonomous Agent Orchestrator
   vibe-kanban:
-    image: node:22-slim
-    container_name: dashboard-daddy
-    working_dir: /app
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /data
+    command: sh -lc "HOST=0.0.0.0 PORT=3000 npx -y vibe-kanban"
     volumes:
-      - vibe-data:/app/data
-      - repos:/repos
-      - ./config:/app/config
-      # Mount host Docker socket for agent execution
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Mount SSH keys for Git operations
-      - ~/.ssh:/root/.ssh:ro
-      # Mount Claude Code config
-      - ~/.claude:/root/.claude:ro
-      # Mount Anthropic API key
-      - ~/.anthropic:/root/.anthropic:ro
-    environment:
-      - HOST=0.0.0.0
-      - PORT=3000
-      - NODE_ENV=production
-      # Agent API Keys (loaded from .env)
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    ports:
-      - "127.0.0.1:3000:3000"  # Only localhost - Cloudflare handles external
-    command: >
-      sh -c "
-        npm install -g pnpm vibe-kanban &&
-        vibe-kanban
-      "
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      - vibe_kanban_data:/data
+      # optional: mount where your git repos live on the VPS
+      # - /srv/repos:/srv/repos
     networks:
-      - dashboard-net
-
-  # Cloudflare Tunnel - Secure External Access
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: dashboard-daddy-tunnel
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      vibe-kanban:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - dashboard-net
-
-networks:
-  dashboard-net:
-    driver: bridge
+      - root_default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vibe-kanban.rule=Host(`claude.dashboard-daddy.com`)"
+      - "traefik.http.routers.vibe-kanban.entrypoints=websecure"
+      - "traefik.http.routers.vibe-kanban.tls=true"
+      - "traefik.http.services.vibe-kanban.loadbalancer.server.port=3000"
 
 volumes:
-  vibe-data:
-    driver: local
-  repos:
-    driver: local
+  vibe_kanban_data:
+
+networks:
+  root_default:
+    external: true
