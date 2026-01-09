@@ -17,8 +17,36 @@ services:
       - "traefik.http.routers.vibe-kanban.tls=true"
       - "traefik.http.services.vibe-kanban.loadbalancer.server.port=3000"
 
+  terminal:
+    image: alpine:3.20
+    restart: unless-stopped
+    working_dir: /root
+
+    # Installs tools + runs a web terminal that auto-attaches tmux
+    command: >
+      sh -lc "
+        apk add --no-cache bash tmux nodejs npm git ttyd &&
+        npm i -g @anthropic-ai/claude-code &&
+        ttyd -p 7681 -i 0.0.0.0 bash -lc 'tmux attach -t main || tmux new -s main'
+      "
+
+    # Persist your home folder so Claude auth + configs survive restarts
+    volumes:
+      - terminal_home:/root
+
+    networks:
+      - root_default
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.terminal.rule=Host(`terminal.dashboard-daddy.com`)"
+      - "traefik.http.routers.terminal.entrypoints=websecure"
+      - "traefik.http.routers.terminal.tls=true"
+      - "traefik.http.services.terminal.loadbalancer.server.port=7681"
+
 volumes:
   vibe_kanban_data:
+  terminal_home:
 
 networks:
   root_default:
