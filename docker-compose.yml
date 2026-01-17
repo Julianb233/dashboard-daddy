@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  # Service 1: The Main Dashboard (Wizard UI)
+  dashboard-daddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dashboard-daddy
+    restart: always
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      # Routers for d.dashboard-daddy.com AND www.dashboard-daddy.com (and potentially root dashboard-daddy.com if desired)
+      - "traefik.http.routers.dashboard-daddy.rule=Host(`d.dashboard-daddy.com`) || Host(`www.dashboard-daddy.com`)"
+      - "traefik.http.routers.dashboard-daddy.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-daddy.tls=true"
+      - "traefik.http.services.dashboard-daddy.loadbalancer.server.port=3000"
+    networks:
+      - root_default
+
+  # Service 2: Vibe Kanban (Legacy)
+  vibe-kanban:
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /data
+    command: sh -lc "HOST=0.0.0.0 PORT=3000 npx -y vibe-kanban"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - vibe_kanban_data:/data
+      - /root/github-repos:/home/vibe/repos
+    networks:
+      - root_default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vibe-kanban.rule=Host(`claude.dashboard-daddy.com`)"
+      - "traefik.http.routers.vibe-kanban.entrypoints=websecure"
+      - "traefik.http.routers.vibe-kanban.tls=true"
+      - "traefik.http.services.vibe-kanban.loadbalancer.server.port=3000"
+
+  # Service 3: Web Terminal (Legacy)
+  terminal:
+    image: alpine:3.20
+    restart: unless-stopped
+    working_dir: /root
+    # Installs tools + runs a web terminal that auto-attaches tmux
+    command: >
+      sh -lc "
+        apk add --no-cache bash tmux nodejs npm git ttyd &&
+        npm i -g @anthropic-ai/claude-code &&
+        ttyd -W -p 7681 -i 0.0.0.0 bash -lc 'tmux attach -t main || tmux new -s main'
+      "
+    # Persist your home folder so Claude auth + configs survive restarts
+    volumes:
+      - terminal_home:/root
+    networks:
+      - root_default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.terminal.rule=Host(`terminal.dashboard-daddy.com`)"
+      - "traefik.http.routers.terminal.entrypoints=websecure"
+      - "traefik.http.routers.terminal.tls=true"
+      - "traefik.http.services.terminal.loadbalancer.server.port=7681"
+
+volumes:
+  vibe_kanban_data:
+  terminal_home:
+
+networks:
+  root_default:
+    external: true
