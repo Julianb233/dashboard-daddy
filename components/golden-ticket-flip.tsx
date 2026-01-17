@@ -1,0 +1,1 @@
+export function GoldenTicketFlip() { return <div className='p-10'>GoldenTicketFlip Placeholder</div> } export function GoldenTicketBio() { return <div className='p-10'>GoldenTicketBio Placeholder</div> }
