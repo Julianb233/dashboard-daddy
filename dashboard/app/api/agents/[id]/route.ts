@@ -1,70 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { loadAgentsConfig } from '@/lib/config-loader';
+import { getAgentStatus, spawnAgent, stopAgent } from '@/lib/process-manager';
 import type {
-  AgentsConfigFile,
   AgentWithStatus,
   AgentDetailResponse,
   AgentUpdateRequest,
   AgentUpdateResponse,
-  AgentStatus,
   ApiErrorResponse,
 } from '@/types/agent-api';
-
-// In-memory mock status store (shared state simulation)
-// In production, this would be a shared store like Redis
-const agentStatusStore: Map<string, {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-}> = new Map();
-
-function getAgentStatus(agentId: string): {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-} {
-  return agentStatusStore.get(agentId) || { status: 'stopped' };
-}
-
-function setAgentStatus(
-  agentId: string,
-  status: AgentStatus,
-  jobId?: string,
-  error?: string
-): void {
-  const current = agentStatusStore.get(agentId) || { status: 'stopped' };
-  agentStatusStore.set(agentId, {
-    ...current,
-    status,
-    currentJobId: status === 'stopped' ? undefined : (jobId ?? current.currentJobId),
-    startedAt: status === 'running' ? new Date().toISOString() : (status === 'stopped' ? undefined : current.startedAt),
-    lastError: error ?? (status === 'running' ? undefined : current.lastError),
-  });
-}
-
-async function loadAgentsConfig(): Promise<AgentsConfigFile> {
-  const configPath = join(process.cwd(), '..', 'config', 'agents.json');
-
-  try {
-    const content = await readFile(configPath, 'utf-8');
-    return JSON.parse(content) as AgentsConfigFile;
-  } catch (error) {
-    const altConfigPath = join(process.cwd(), 'config', 'agents.json');
-    try {
-      const content = await readFile(altConfigPath, 'utf-8');
-      return JSON.parse(content) as AgentsConfigFile;
-    } catch {
-      throw new Error(`Failed to load agents config: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-}
-
-function generateJobId(): string {
-  return `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
 
 // GET /api/agents/[id] - Get single agent details
 export async function GET(
@@ -107,9 +50,9 @@ export async function GET(
       args: agentConfig.args,
       envRequired: agentConfig.envRequired,
       features: agentConfig.features,
-      currentJobId: statusInfo.currentJobId,
+      currentJobId: statusInfo.jobId,
       startedAt: statusInfo.startedAt,
-      lastError: statusInfo.lastError,
+      lastError: undefined,
     };
 
     const response: AgentDetailResponse = {
@@ -179,10 +122,7 @@ export async function PATCH(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    const currentStatus = getAgentStatus(agentId);
     let message: string;
-    let newStatus: AgentStatus;
-    let jobId: string | undefined;
 
     if (body.action === 'start') {
       if (!agentConfig.enabled) {
@@ -194,49 +134,49 @@ export async function PATCH(
         return NextResponse.json(errorResponse, { status: 400 });
       }
 
-      if (currentStatus.status === 'running') {
+      const result = await spawnAgent(agentId);
+
+      if (!result.success) {
         const errorResponse: ApiErrorResponse = {
-          error: 'Agent is already running',
-          code: 'AGENT_ALREADY_RUNNING',
+          error: result.error || 'Failed to start agent',
+          code: 'AGENT_START_FAILED',
           timestamp: new Date().toISOString(),
         };
         return NextResponse.json(errorResponse, { status: 409 });
       }
 
-      jobId = generateJobId();
-      newStatus = 'running';
       message = `Agent ${agentConfig.name} started successfully`;
-      setAgentStatus(agentId, newStatus, jobId);
     } else {
-      if (currentStatus.status === 'stopped') {
+      const result = await stopAgent(agentId);
+
+      if (!result.success) {
         const errorResponse: ApiErrorResponse = {
-          error: 'Agent is already stopped',
-          code: 'AGENT_ALREADY_STOPPED',
+          error: result.error || 'Failed to stop agent',
+          code: 'AGENT_STOP_FAILED',
           timestamp: new Date().toISOString(),
         };
         return NextResponse.json(errorResponse, { status: 409 });
       }
 
-      newStatus = 'stopped';
       message = `Agent ${agentConfig.name} stopped successfully`;
-      setAgentStatus(agentId, newStatus);
     }
 
-    const updatedStatus = getAgentStatus(agentId);
+    // Get updated status after action
+    const statusInfo = getAgentStatus(agentId);
 
     const agent: AgentWithStatus = {
       id: agentId,
       name: agentConfig.name,
       description: agentConfig.description,
       enabled: agentConfig.enabled,
-      status: updatedStatus.status,
+      status: statusInfo.status,
       command: agentConfig.command,
       args: agentConfig.args,
       envRequired: agentConfig.envRequired,
       features: agentConfig.features,
-      currentJobId: updatedStatus.currentJobId,
-      startedAt: updatedStatus.startedAt,
-      lastError: updatedStatus.lastError,
+      currentJobId: statusInfo.jobId,
+      startedAt: statusInfo.startedAt,
+      lastError: undefined,
     };
 
     const response: AgentUpdateResponse = {
