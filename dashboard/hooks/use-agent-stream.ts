@@ -51,6 +51,7 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
+  const connectRef = useRef<() => void>(() => {});
 
   // Stream URL
   const streamUrl = `/api/agents/${encodeURIComponent(agentId)}/stream`;
@@ -152,7 +153,7 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
 
             reconnectTimeoutRef.current = setTimeout(() => {
               if (mountedRef.current) {
-                connect();
+                connectRef.current();
               }
             }, delay);
 
@@ -171,6 +172,11 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
       setError(err instanceof Error ? err.message : 'Failed to connect to stream');
     }
   }, [streamUrl, maxMessages, reconnectDelay, maxReconnectAttempts, connectionStatus]);
+
+  // Keep ref in sync with latest connect function
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   // Clear all messages
   const clearMessages = useCallback(() => {

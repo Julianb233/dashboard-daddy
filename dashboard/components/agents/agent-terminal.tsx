@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { useAgentStream, AgentMessage, ConnectionStatus } from '@/hooks/use-agent-stream';
 import { cn } from '@/lib/utils';
 
@@ -186,7 +186,7 @@ export default function AgentTerminal({
 }: AgentTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const shouldAutoScrollRef = useRef(true);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const {
     messages,
@@ -204,10 +204,10 @@ export default function AgentTerminal({
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (shouldAutoScrollRef.current && bottomRef.current) {
+    if (shouldAutoScroll && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages.length]);
+  }, [messages.length, shouldAutoScroll]);
 
   // Handle scroll to detect if user has scrolled up
   const handleScroll = useCallback(() => {
@@ -216,12 +216,12 @@ export default function AgentTerminal({
     const { scrollTop, scrollHeight, clientHeight } = terminalRef.current;
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
 
-    shouldAutoScrollRef.current = isAtBottom;
+    setShouldAutoScroll(isAtBottom);
   }, []);
 
   // Scroll to bottom manually
   const scrollToBottom = useCallback(() => {
-    shouldAutoScrollRef.current = true;
+    setShouldAutoScroll(true);
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
@@ -318,7 +318,7 @@ export default function AgentTerminal({
         </div>
 
         <div className="flex items-center gap-2">
-          {!shouldAutoScrollRef.current && messages.length > 0 && (
+          {!shouldAutoScroll && messages.length > 0 && (
             <button
               onClick={scrollToBottom}
               className="text-blue-400 hover:text-blue-300 transition-colors"

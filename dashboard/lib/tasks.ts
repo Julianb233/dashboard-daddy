@@ -135,7 +135,7 @@ const mockTasks: Task[] = [
 ];
 
 // Track tasks in memory for mock mutations
-let tasksStore = [...mockTasks];
+const tasksStore = [...mockTasks];
 
 export async function fetchTasks(filters?: TaskFiltersState): Promise<TaskApiResponse> {
   // TODO: Replace with actual API call to Vibe Kanban
