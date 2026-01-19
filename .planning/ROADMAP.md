@@ -6,8 +6,8 @@
 
 ### Phases
 
-- [ ] **Phase 1: Foundation** — Next.js project structure, Tailwind, Docker integration
-- [ ] **Phase 2: Authentication** — Supabase Auth or NextAuth, protected routes
+- [x] **Phase 1: Foundation** — Next.js project structure, Tailwind, Docker integration
+- [x] **Phase 2: Authentication** — NextAuth v5, protected routes, session management
 - [ ] **Phase 3: Agent API** — REST endpoints for agent control, status polling
 - [ ] **Phase 4: Dashboard UI** — Project list, agent status cards, job queue view
 - [ ] **Phase 5: Terminal Integration** — Embed ttyd terminal, split-pane layout
