@@ -1,85 +1,18 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { loadAgentsConfig } from '@/lib/config-loader';
+import { getAgentStatus } from '@/lib/process-manager';
 import type {
-  AgentsConfigFile,
   AgentWithStatus,
   AgentsListResponse,
-  AgentStatus,
   ApiErrorResponse,
 } from '@/types/agent-api';
-
-// In-memory mock status store (in production, use Redis or similar)
-// This simulates agent status tracking
-const agentStatusStore: Map<string, {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-}> = new Map();
-
-// Initialize default statuses
-function initializeAgentStatus(agentId: string, enabled: boolean): void {
-  if (!agentStatusStore.has(agentId)) {
-    agentStatusStore.set(agentId, {
-      status: enabled ? 'stopped' : 'stopped',
-    });
-  }
-}
-
-// Export for use by other routes
-export function getAgentStatus(agentId: string): {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-} {
-  return agentStatusStore.get(agentId) || { status: 'stopped' };
-}
-
-export function setAgentStatus(
-  agentId: string,
-  status: AgentStatus,
-  jobId?: string,
-  error?: string
-): void {
-  const current = agentStatusStore.get(agentId) || { status: 'stopped' };
-  agentStatusStore.set(agentId, {
-    ...current,
-    status,
-    currentJobId: jobId ?? current.currentJobId,
-    startedAt: status === 'running' ? new Date().toISOString() : current.startedAt,
-    lastError: error ?? current.lastError,
-  });
-}
-
-async function loadAgentsConfig(): Promise<AgentsConfigFile> {
-  // Config is in the parent directory of the dashboard
-  const configPath = join(process.cwd(), '..', 'config', 'agents.json');
-
-  try {
-    const content = await readFile(configPath, 'utf-8');
-    return JSON.parse(content) as AgentsConfigFile;
-  } catch (error) {
-    // Fallback: try alternative path in case cwd is different
-    const altConfigPath = join(process.cwd(), 'config', 'agents.json');
-    try {
-      const content = await readFile(altConfigPath, 'utf-8');
-      return JSON.parse(content) as AgentsConfigFile;
-    } catch {
-      throw new Error(`Failed to load agents config: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-}
 
 export async function GET(): Promise<NextResponse<AgentsListResponse | ApiErrorResponse>> {
   try {
     const config = await loadAgentsConfig();
 
-    // Convert config agents to array with status
+    // Convert config agents to array with real-time status from ProcessManager
     const agents: AgentWithStatus[] = Object.entries(config.agents).map(([id, agent]) => {
-      // Initialize status if not present
-      initializeAgentStatus(id, agent.enabled);
       const statusInfo = getAgentStatus(id);
 
       return {
@@ -92,9 +25,9 @@ export async function GET(): Promise<NextResponse<AgentsListResponse | ApiErrorR
         args: agent.args,
         envRequired: agent.envRequired,
         features: agent.features,
-        currentJobId: statusInfo.currentJobId,
+        currentJobId: statusInfo.jobId,
         startedAt: statusInfo.startedAt,
-        lastError: statusInfo.lastError,
+        lastError: undefined, // TODO: Track errors in ProcessManager
       };
     });
 
