@@ -1,68 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { loadAgentsConfig } from '@/lib/config-loader';
+import { spawnAgent, getAgentStatus } from '@/lib/process-manager';
 import type {
-  AgentsConfigFile,
   AgentStartRequest,
   AgentStartResponse,
-  AgentStatus,
   ApiErrorResponse,
 } from '@/types/agent-api';
-
-// In-memory mock status store (shared state simulation)
-// In production, this would be a shared store like Redis
-const agentStatusStore: Map<string, {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-}> = new Map();
-
-function getAgentStatus(agentId: string): {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-} {
-  return agentStatusStore.get(agentId) || { status: 'stopped' };
-}
-
-function setAgentStatus(
-  agentId: string,
-  status: AgentStatus,
-  jobId?: string,
-  error?: string
-): void {
-  const current = agentStatusStore.get(agentId) || { status: 'stopped' };
-  agentStatusStore.set(agentId, {
-    ...current,
-    status,
-    currentJobId: jobId ?? current.currentJobId,
-    startedAt: status === 'running' ? new Date().toISOString() : current.startedAt,
-    lastError: error ?? current.lastError,
-  });
-}
-
-async function loadAgentsConfig(): Promise<AgentsConfigFile> {
-  const configPath = join(process.cwd(), '..', 'config', 'agents.json');
-
-  try {
-    const content = await readFile(configPath, 'utf-8');
-    return JSON.parse(content) as AgentsConfigFile;
-  } catch (error) {
-    const altConfigPath = join(process.cwd(), 'config', 'agents.json');
-    try {
-      const content = await readFile(altConfigPath, 'utf-8');
-      return JSON.parse(content) as AgentsConfigFile;
-    } catch {
-      throw new Error(`Failed to load agents config: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-}
-
-function generateJobId(): string {
-  return `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
 
 // POST /api/agents/[id]/start - Start an agent
 export async function POST(
@@ -102,6 +45,7 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
+    // Check current status
     const currentStatus = getAgentStatus(agentId);
 
     if (currentStatus.status === 'running') {
@@ -109,7 +53,7 @@ export async function POST(
         error: 'Agent is already running',
         code: 'AGENT_ALREADY_RUNNING',
         details: {
-          currentJobId: currentStatus.currentJobId,
+          currentJobId: currentStatus.jobId,
           startedAt: currentStatus.startedAt,
         },
         timestamp: new Date().toISOString(),
@@ -126,7 +70,7 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 409 });
     }
 
-    // Parse optional request body
+    // Parse optional request body for spawn options
     let startRequest: AgentStartRequest = {};
     try {
       const body = await request.text();
@@ -137,21 +81,25 @@ export async function POST(
       // Body is optional, ignore parse errors
     }
 
-    // Generate a unique job ID
-    const jobId = generateJobId();
+    // Spawn the actual process via ProcessManager
+    const result = await spawnAgent(agentId, {
+      workingDirectory: startRequest.workingDirectory,
+      prompt: startRequest.taskId, // Use taskId as the prompt for now
+      environment: startRequest.environment,
+    });
 
-    // Set status to starting, then running (simulating async start)
-    setAgentStatus(agentId, 'starting', jobId);
-
-    // Simulate async startup delay
-    // In production, this would trigger actual agent process
-    setTimeout(() => {
-      setAgentStatus(agentId, 'running', jobId);
-    }, 100);
+    if (!result.success) {
+      const errorResponse: ApiErrorResponse = {
+        error: result.error || 'Failed to start agent',
+        code: 'AGENT_START_ERROR',
+        timestamp: new Date().toISOString(),
+      };
+      return NextResponse.json(errorResponse, { status: 500 });
+    }
 
     const response: AgentStartResponse = {
       success: true,
-      jobId,
+      jobId: result.jobId!,
       agentId,
       message: `Agent ${agentConfig.name} is starting`,
       timestamp: new Date().toISOString(),
