@@ -1,64 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { loadAgentsConfig } from '@/lib/config-loader';
+import { stopAgent, getAgentStatus } from '@/lib/process-manager';
 import type {
-  AgentsConfigFile,
   AgentStopRequest,
   AgentStopResponse,
-  AgentStatus,
   ApiErrorResponse,
 } from '@/types/agent-api';
-
-// In-memory mock status store (shared state simulation)
-// In production, this would be a shared store like Redis
-const agentStatusStore: Map<string, {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-}> = new Map();
-
-function getAgentStatus(agentId: string): {
-  status: AgentStatus;
-  currentJobId?: string;
-  startedAt?: string;
-  lastError?: string;
-} {
-  return agentStatusStore.get(agentId) || { status: 'stopped' };
-}
-
-function setAgentStatus(
-  agentId: string,
-  status: AgentStatus,
-  jobId?: string,
-  error?: string
-): void {
-  const current = agentStatusStore.get(agentId) || { status: 'stopped' };
-  agentStatusStore.set(agentId, {
-    ...current,
-    status,
-    currentJobId: status === 'stopped' ? undefined : (jobId ?? current.currentJobId),
-    startedAt: status === 'stopped' ? undefined : current.startedAt,
-    lastError: error ?? current.lastError,
-  });
-}
-
-async function loadAgentsConfig(): Promise<AgentsConfigFile> {
-  const configPath = join(process.cwd(), '..', 'config', 'agents.json');
-
-  try {
-    const content = await readFile(configPath, 'utf-8');
-    return JSON.parse(content) as AgentsConfigFile;
-  } catch (error) {
-    const altConfigPath = join(process.cwd(), 'config', 'agents.json');
-    try {
-      const content = await readFile(altConfigPath, 'utf-8');
-      return JSON.parse(content) as AgentsConfigFile;
-    } catch {
-      throw new Error(`Failed to load agents config: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-}
 
 // POST /api/agents/[id]/stop - Stop an agent
 export async function POST(
@@ -89,6 +36,7 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
+    // Check current status
     const currentStatus = getAgentStatus(agentId);
 
     if (currentStatus.status === 'stopped') {
@@ -109,7 +57,7 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 409 });
     }
 
-    // Parse optional request body
+    // Parse optional request body for stop options
     let stopRequest: AgentStopRequest = {};
     try {
       const body = await request.text();
@@ -120,16 +68,19 @@ export async function POST(
       // Body is optional, ignore parse errors
     }
 
-    // Set status to stopping
-    setAgentStatus(agentId, 'stopping');
+    // Stop the actual process via ProcessManager
+    const result = await stopAgent(agentId, {
+      force: stopRequest.force,
+    });
 
-    // Simulate async stop process
-    // In production, this would send termination signal to actual agent process
-    const stopDelay = stopRequest.force ? 50 : 200;
-
-    setTimeout(() => {
-      setAgentStatus(agentId, 'stopped');
-    }, stopDelay);
+    if (!result.success) {
+      const errorResponse: ApiErrorResponse = {
+        error: result.error || 'Failed to stop agent',
+        code: 'AGENT_STOP_ERROR',
+        timestamp: new Date().toISOString(),
+      };
+      return NextResponse.json(errorResponse, { status: 500 });
+    }
 
     const response: AgentStopResponse = {
       success: true,
