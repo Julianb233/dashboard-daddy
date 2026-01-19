@@ -6,11 +6,15 @@ services:
     command: sh -lc "HOST=0.0.0.0 PORT=3000 npx -y vibe-kanban"
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - vibe_kanban_data:/data
       - /root/github-repos:/home/vibe/repos
+      - ./config:/data/config
     networks:
       - root_default
+      - web
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vibe-kanban.rule=Host(`claude.dashboard-daddy.com`)"
@@ -27,16 +31,20 @@ services:
     command: >
       sh -lc "
         apk add --no-cache bash tmux nodejs npm git ttyd &&
-        npm i -g @anthropic-ai/claude-code &&
+        npm i -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex &&
         ttyd -W -p 7681 -i 0.0.0.0 bash -lc 'tmux attach -t main || tmux new -s main'
       "
 
     # Persist your home folder so Claude auth + configs survive restarts
     volumes:
       - terminal_home:/root
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
     networks:
       - root_default
+      - web
 
     labels:
       - "traefik.enable=true"
@@ -45,10 +53,43 @@ services:
       - "traefik.http.routers.terminal.tls=true"
       - "traefik.http.services.terminal.loadbalancer.server.port=7681"
 
+  scim-bridge:
+    image: 1password/scim:latest
+    restart: unless-stopped
+    volumes:
+      - scim_data:/home/opuser/.op/data
+      - ./scimsession:/home/opuser/.op/scimsession
+    networks:
+      - root_default
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scim-bridge.rule=Host(`scim.dashboard-daddy.com`)"
+      - "traefik.http.routers.scim-bridge.entrypoints=websecure"
+      - "traefik.http.routers.scim-bridge.tls=true"
+      - "traefik.http.services.scim-bridge.loadbalancer.server.port=8443"
+      - "traefik.http.services.scim-bridge.loadbalancer.server.scheme=https"
+    environment:
+      - OP_REDIS_URL=redis://redis:6379
+      - OP_TLS_DOMAIN=scim.dashboard-daddy.com
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - root_default
+    volumes:
+      - redis_data:/data
+
 volumes:
   vibe_kanban_data:
   terminal_home:
+  scim_data:
+  redis_data:
+
 
 networks:
   root_default:
+    external: true
+  web:
     external: true

@@ -162,10 +162,15 @@ dashboard-daddy/
 │   └── dashboard-daddy.service  # Systemd unit
 ├── scripts/
 │   ├── install.sh          # Full installation
-│   └── setup-cloudflare-tunnel.sh  # Tunnel troubleshooting
+│   ├── setup-cloudflare-tunnel.sh  # Tunnel troubleshooting
+│   └── seed_active_projects.js # Project seeding automation
 └── docs/
-    └── (additional documentation)
+    └── [project_seeding.md](docs/project_seeding.md) # Automated setup docs
 ```
+
+## Project Seeding
+
+For information on how to use the automated project seeding script, strictly see [docs/project_seeding.md](docs/project_seeding.md).
 
 ## Security Notes
 
