@@ -5,32 +5,35 @@
 See: .planning/PROJECT.md
 
 **Core value:** AI coding agents accessible from any device, running autonomously in parallel
-**Current focus:** Phase 3 — Agent API (next)
+**Current focus:** Phase 4 — Dashboard UI (next)
 
 ## Current Position
 
-Phase: 2 of 6 (Authentication complete)
-Plan: 1/1 in current phase
-Status: Phase 2 complete, ready for Phase 3
-Last activity: 2026-01-19 — Completed 02-01-PLAN.md (Authentication gaps fix)
+Phase: 3 of 6 (Agent API complete)
+Plan: 2/2 in current phase
+Status: Phase 3 complete, ready for Phase 4
+Last activity: 2026-01-19 — Completed Phase 3 (Agent API)
 
-Progress: [####======] 33% (2 of 6 phases complete)
+Progress: [#####=====] 50% (3 of 6 phases complete)
 
-## Phase 2 Complete
+## Phase 3 Complete
 
 **What was delivered:**
-- All dashboard routes protected by authentication middleware (/agents, /projects, /settings, /tasks, /metrics)
-- Consistent /auth/signin callback URLs throughout codebase
-- Fixed GitHub OAuth env var names (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
-- Sign-in page, sign-out functionality, user session in UI (existed, now properly integrated)
+- ProcessManager singleton for spawning and managing CLI agent processes
+- Config-loader utility for centralized agents.json loading with caching
+- POST /api/agents/[id]/start - Spawns real child processes
+- POST /api/agents/[id]/stop - Terminates processes (SIGTERM → SIGKILL)
+- GET /api/agents/[id]/stream - Real-time SSE output streaming
+- GET /api/agents - List agents with real-time status from ProcessManager
+- All routes share single ProcessManager state (no duplicate Maps)
 
-**Verification:** All 4 must-haves verified (see 02-VERIFICATION.md)
+**Verification:** All 11 must-haves verified (see 03-VERIFICATION.md)
 
 ## Performance Metrics
 
-Commits: 3
-Phases complete: 2
-Plans executed: 2
+Commits: 10
+Phases complete: 3
+Plans executed: 4
 
 ## Decisions Made
 
@@ -43,13 +46,16 @@ Plans executed: 2
 | Docker output | standalone | Minimal image size (~100MB) |
 | Container user | Non-root (nextjs) | Security best practice |
 | Auth providers | GitHub OAuth + Credentials | Flexibility for team and local dev |
+| Process management | Singleton ProcessManager | Persists across API route invocations |
+| Output streaming | SSE via EventEmitter | Real-time without WebSocket complexity |
+| Graceful shutdown | SIGTERM + 5s timeout | Allows cleanup before force kill |
 
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: Completed Phase 2 (Authentication)
+Stopped at: Completed Phase 3 (Agent API)
 Resume file: None
 
 ## Next Action
 
-`/gsd:plan-phase 3` (Agent API)
+`/gsd:plan-phase 4` (Dashboard UI)
