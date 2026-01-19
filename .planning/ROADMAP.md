@@ -1,143 +1,93 @@
-# Dashboard Daddy Development Roadmap
+# Dashboard Daddy Roadmap
 
-This roadmap outlines the phased development of the Next.js frontend dashboard for Dashboard Daddy - an autonomous AI coding agent platform.
+## Milestone 1: MVP Dashboard
 
-## Current State
+**Goal**: Replace Vibe Kanban with custom Next.js dashboard for agent orchestration
 
-- Docker Compose stack is fully operational with Vibe Kanban, terminal, SCIM bridge, and Redis
-- Cloudflare Tunnel configured for secure remote access
-- Web terminal available via ttyd on port 7681
-- **Next.js dashboard frontend has NOT been built yet**
+### Phases
 
----
-
-## Phase 1: Foundation
-
-**Goal:** Establish the Next.js project scaffold with Tailwind CSS styling and basic routing structure.
-
-**Delivers:**
-- Next.js 14+ project initialized with App Router
-- Tailwind CSS configured with custom theme matching agency standards
-- Basic layout components (header, sidebar, main content area)
-- Routing structure for dashboard pages (`/`, `/agents`, `/tasks`, `/logs`)
-- Environment configuration for development and production
-- TypeScript setup with strict mode enabled
-- ESLint and Prettier configuration
-
-**Dependencies:** None - this is the foundation phase
+- [ ] **Phase 1: Foundation** — Next.js project structure, Tailwind, Docker integration
+- [ ] **Phase 2: Authentication** — Supabase Auth or NextAuth, protected routes
+- [ ] **Phase 3: Agent API** — REST endpoints for agent control, status polling
+- [ ] **Phase 4: Dashboard UI** — Project list, agent status cards, job queue view
+- [ ] **Phase 5: Terminal Integration** — Embed ttyd terminal, split-pane layout
+- [ ] **Phase 6: Polish & Deploy** — Mobile optimization, error handling, Vercel/Docker deployment
 
 ---
 
-## Phase 2: Authentication
+### Phase 1: Foundation
+**Goal**: Scaffolded Next.js app running in Docker alongside existing services
+**Depends on**: None
+**Plans:** 1 plan
 
-**Goal:** Implement secure authentication using Supabase to protect all dashboard routes.
+**Status:** Next.js 16 app with App Router, Tailwind CSS 4, and full dashboard UI already exist in `dashboard/`. Remaining work is Docker integration.
 
-**Delivers:**
-- Supabase project integration with environment variables
-- Authentication UI (login, logout, password reset)
+Plans:
+- [ ] 01-01-PLAN.md — Docker integration (Dockerfile + compose + Traefik)
+
+**Deliverables:**
+- Next.js 14 app with App Router (DONE - using Next.js 16)
+- Tailwind CSS configured (DONE)
+- Docker service added to compose (PLANNED)
+- Traefik routing configured (PLANNED)
+- Basic landing page (DONE - full dashboard UI exists)
+
+---
+
+### Phase 2: Authentication
+**Goal**: Secure access with login/logout, session management
+**Depends on**: Phase 1
+
+**Deliverables:**
+- Auth provider setup (Supabase or NextAuth)
+- Login/logout pages
 - Protected route middleware
-- Session management and persistence
-- User profile display in dashboard header
-- Redirect unauthenticated users to login
-- Basic role-based access (admin vs viewer)
-
-**Dependencies:** Phase 1 (Foundation) must be complete
+- User session in UI
 
 ---
 
-## Phase 3: Agent Dashboard
+### Phase 3: Agent API
+**Goal**: Backend endpoints to spawn, monitor, and stop agents
+**Depends on**: Phase 1
 
-**Goal:** Create the primary interface for viewing and controlling AI coding agents.
-
-**Delivers:**
-- Agent status cards showing current state (running, idle, stopped, error)
-- Start/stop/restart controls for each agent (Claude Code, Gemini CLI, OpenAI Codex)
-- Basic metrics display (uptime, tasks completed, current task)
-- Agent health indicators with visual status
-- Configuration viewer for agent settings
-- Docker API integration for container management
-- Error state handling and display
-
-**Dependencies:** Phase 2 (Authentication) must be complete
+**Deliverables:**
+- POST /api/agents/spawn - Start agent on project
+- GET /api/agents/status - List running agents
+- POST /api/agents/stop - Terminate agent
+- WebSocket or polling for real-time status
 
 ---
 
-## Phase 4: Vibe Kanban Integration
+### Phase 4: Dashboard UI
+**Goal**: Visual interface for managing projects and agents
+**Depends on**: Phase 2, Phase 3
 
-**Goal:** Display and manage the task queue from the existing Vibe Kanban service.
-
-**Delivers:**
-- Task queue visualization from Vibe Kanban API
-- Kanban board view (To Do, In Progress, Done columns)
-- Task detail modal with full information
-- Task assignment to specific agents
-- Task priority management
-- Filter and search functionality
-- Integration with Vibe Kanban on port 3000 (internal network)
-- Deep linking to full Vibe Kanban interface
-
-**Dependencies:** Phase 3 (Agent Dashboard) must be complete
+**Deliverables:**
+- Project cards with agent status
+- Job queue table
+- Agent output viewer
+- Start/stop controls
 
 ---
 
-## Phase 5: Real-time Features
+### Phase 5: Terminal Integration
+**Goal**: Embedded terminal for direct agent interaction
+**Depends on**: Phase 4
 
-**Goal:** Add live updates and log streaming for real-time agent monitoring.
-
-**Delivers:**
-- WebSocket connection for live status updates
-- Agent log streaming with color-coded output
-- Real-time task progress indicators
-- Live terminal output preview (from ttyd integration)
-- Push notifications for task completion/failure
-- Auto-refresh with configurable intervals
-- Connection status indicator with reconnection logic
-- Server-Sent Events (SSE) fallback option
-
-**Dependencies:** Phase 4 (Vibe Kanban Integration) must be complete
+**Deliverables:**
+- ttyd iframe or xterm.js integration
+- Split-pane layout (dashboard + terminal)
+- Terminal session management
 
 ---
 
-## Phase 6: Polish & Deploy
+### Phase 6: Polish & Deploy
+**Goal**: Production-ready deployment
+**Depends on**: Phase 5
 
-**Goal:** Prepare the dashboard for production deployment on Vercel with optimizations.
-
-**Delivers:**
-- Vercel deployment configuration
-- Production environment variables setup
-- Performance optimization (code splitting, lazy loading)
-- Comprehensive error boundaries and fallback UI
-- Loading states and skeleton screens
-- Responsive design validation (mobile, tablet, desktop)
-- Lighthouse performance audit and fixes
-- Error logging integration (Sentry or similar)
-- Documentation for deployment and configuration
-- CI/CD pipeline with preview deployments
-
-**Dependencies:** Phase 5 (Real-time Features) must be complete
-
----
-
-## Architecture Notes
-
-### Tech Stack
-- **Framework:** Next.js 14+ with App Router
-- **Styling:** Tailwind CSS
-- **Auth:** Supabase
-- **Deployment:** Vercel
-- **State Management:** React Server Components + minimal client state
-
-### Integration Points
-- **Vibe Kanban:** `http://vibe-kanban:3000` (Docker internal network)
-- **Terminal:** `http://terminal:7681` (ttyd web terminal)
-- **Redis:** `redis://redis:6379` (session caching if needed)
-
-### Security Considerations
-- All traffic through Cloudflare Tunnel
-- Supabase Row Level Security for data access
-- Environment variables for all secrets
-- No direct port exposure to internet
-
----
-
-*Last updated: 2026-01-19*
+**Deliverables:**
+- Mobile-responsive design
+- Error boundaries and toasts
+- Docker production build
+- Vercel deployment option
+- Documentation update
