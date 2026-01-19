@@ -106,3 +106,39 @@ export interface ApiErrorResponse {
   details?: Record<string, unknown>;
   timestamp: string;
 }
+
+// Process management types (used by ProcessManager)
+export interface SpawnAgentOptions {
+  workingDirectory?: string;
+  prompt?: string;
+  environment?: Record<string, string>;
+}
+
+export interface SpawnAgentResult {
+  success: boolean;
+  jobId?: string;
+  error?: string;
+}
+
+export interface StopAgentOptions {
+  force?: boolean;
+}
+
+export interface StopAgentResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface ProcessStatus {
+  status: AgentStatus;
+  jobId?: string;
+  startedAt?: string;
+  pid?: number;
+}
+
+export interface AgentOutputMessage {
+  type: 'stdout' | 'stderr' | 'system' | 'exit';
+  data: string;
+  timestamp: string;
+  level?: 'info' | 'warn' | 'error' | 'debug';
+}
