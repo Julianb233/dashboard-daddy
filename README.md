@@ -51,7 +51,7 @@ Access your AI coding agents from any device (iPhone, iPad, Mac, PC) through you
 ### 1. Clone and Configure
 
 ```bash
-cd /root/github-repos/dashboard-daddy
+cd /opt/agency-workspace/dashboard-daddy
 cp .env.example .env
 nano .env  # Add your API keys and tunnel token
 ```
@@ -183,7 +183,7 @@ For information on how to use the automated project seeding script, strictly see
 ## Updates
 
 ```bash
-cd /root/github-repos/dashboard-daddy
+cd /opt/agency-workspace/dashboard-daddy
 docker compose pull
 docker compose up -d
 ```

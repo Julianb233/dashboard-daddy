@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Bot, FolderKanban, Settings, Menu } from "lucide-react"
+import { Home, Bot, FolderKanban, Settings, Menu, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +16,7 @@ import {
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/metrics", label: "Metrics", icon: BarChart3 },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/settings", label: "Settings", icon: Settings },
 ]

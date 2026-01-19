@@ -9,7 +9,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Group=docker
-WorkingDirectory=/root/github-repos/dashboard-daddy
+WorkingDirectory=/opt/agency-workspace/dashboard-daddy
 
 # Start the containers
 ExecStart=/usr/bin/docker compose up --remove-orphans
@@ -20,7 +20,7 @@ Restart=always
 RestartSec=10
 
 # Environment file
-EnvironmentFile=/root/github-repos/dashboard-daddy/.env
+EnvironmentFile=/opt/agency-workspace/dashboard-daddy/.env
 
 # Logging
 StandardOutput=journal

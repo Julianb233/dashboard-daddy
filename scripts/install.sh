@@ -4,7 +4,7 @@
 
 set -e
 
-INSTALL_DIR="/root/github-repos/dashboard-daddy"
+INSTALL_DIR="/opt/agency-workspace/dashboard-daddy"
 cd "$INSTALL_DIR"
 
 echo "=========================================="
