@@ -55,7 +55,7 @@ export function Header({ title = "Dashboard Daddy", className }: HeaderProps) {
   }
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/login" })
+    signOut({ callbackUrl: "/auth/signin" })
   }
 
   // Get user initials for avatar fallback
@@ -170,7 +170,7 @@ export function Header({ title = "Dashboard Daddy", className }: HeaderProps) {
           </DropdownMenu>
         ) : (
           <Button asChild variant="default" size="sm">
-            <Link href="/login">Sign In</Link>
+            <Link href="/auth/signin">Sign In</Link>
           </Button>
         )}
       </div>

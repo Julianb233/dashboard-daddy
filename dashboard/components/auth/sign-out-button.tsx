@@ -12,7 +12,7 @@ export function SignOutButton({
   children,
 }: SignOutButtonProps) {
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/login" });
+    signOut({ callbackUrl: "/auth/signin" });
   };
 
   return (

@@ -6,7 +6,7 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   // Routes that require authentication
-  const protectedRoutes = ["/agents", "/projects"];
+  const protectedRoutes = ["/agents", "/projects", "/settings", "/tasks", "/metrics"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   );
@@ -37,6 +37,9 @@ export const config = {
     // Protected routes
     "/agents/:path*",
     "/projects/:path*",
+    "/settings/:path*",
+    "/tasks/:path*",
+    "/metrics/:path*",
     // Auth pages
     "/auth/:path*",
     // API auth routes (to allow through)
