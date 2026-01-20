@@ -112,7 +112,6 @@ export function AgentCard({
   const { icon: TypeIcon, gradient, label: typeLabel } = agentTypeConfig[agent.type];
   const { color: statusColor, dotColor, label: statusLabel } = statusConfig[agent.status];
 
-  const isOnline = agent.status === 'online';
   const isBusy = agent.status === 'busy';
   const isOffline = agent.status === 'offline';
 

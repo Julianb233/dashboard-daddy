@@ -1,4 +1,4 @@
-import { Agent, AgentStatus, AgentType, AgentWithStats, AgentPerformanceData, AgentHistoricalMetrics } from '@/types/agent';
+import { AgentStatus, AgentType, AgentWithStats, AgentPerformanceData, AgentHistoricalMetrics } from '@/types/agent';
 
 /**
  * Mock agent data for development - based on docker-compose.yml services

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import AgentTerminal from '@/components/agents/agent-terminal';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {
   Play,
@@ -15,61 +16,19 @@ import {
   Cpu,
   Workflow,
   CircleDot,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import type { AgentWithStatus, AgentDetailResponse, ApiErrorResponse } from '@/types/agent-api';
 
-// Mock agent data - in production this would come from an API
-const mockAgents: Record<string, {
-  name: string;
-  status: 'running' | 'stopped' | 'error' | 'starting';
-  type: 'assistant' | 'worker' | 'orchestrator' | 'monitor';
-  description: string;
-  config: Record<string, string | number | boolean>;
-}> = {
-  'agent-1': {
-    name: 'Code Assistant',
-    status: 'running',
-    type: 'assistant',
-    description: 'AI-powered coding assistant for development tasks',
-    config: {
-      model: 'claude-3-opus',
-      maxTokens: 4096,
-      temperature: 0.7,
-      autoRetry: true,
-      timeout: 30000,
-    },
-  },
-  'agent-2': {
-    name: 'Data Processor',
-    status: 'stopped',
-    type: 'worker',
-    description: 'Background worker for processing data pipelines',
-    config: {
-      batchSize: 100,
-      parallelism: 4,
-      retryAttempts: 3,
-      logLevel: 'info',
-    },
-  },
-  'agent-3': {
-    name: 'Task Orchestrator',
-    status: 'running',
-    type: 'orchestrator',
-    description: 'Coordinates and manages multiple agent workflows',
-    config: {
-      maxConcurrent: 10,
-      queueSize: 1000,
-      healthCheckInterval: 60000,
-    },
-  },
-};
-
-// Type icon mapping
-const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  assistant: Bot,
-  worker: Cpu,
-  orchestrator: Workflow,
-  monitor: CircleDot,
-};
+// Type icon mapping based on agent id
+function getTypeIcon(agentId: string): React.ComponentType<{ className?: string }> {
+  if (agentId.includes('claude')) return Bot;
+  if (agentId.includes('gemini')) return Cpu;
+  if (agentId.includes('codex') || agentId.includes('openai')) return Workflow;
+  return CircleDot;
+}
 
 // Status badge styles
 const statusStyles: Record<string, { bg: string; text: string; dot: string }> = {
@@ -93,6 +52,11 @@ const statusStyles: Record<string, { bg: string; text: string; dot: string }> = 
     text: 'text-yellow-700 dark:text-yellow-400',
     dot: 'bg-yellow-500 animate-pulse',
   },
+  stopping: {
+    bg: 'bg-orange-500/10 dark:bg-orange-500/20',
+    text: 'text-orange-700 dark:text-orange-400',
+    dot: 'bg-orange-500 animate-pulse',
+  },
 };
 
 interface AgentDetailPageProps {
@@ -101,33 +65,149 @@ interface AgentDetailPageProps {
 
 export default function AgentDetailPage({ params }: AgentDetailPageProps) {
   const { id: agentId } = use(params);
+  const [agent, setAgent] = useState<AgentWithStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [configOpen, setConfigOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Get agent data (mock for now)
-  const agent = mockAgents[agentId] || {
-    name: `Agent ${agentId}`,
-    status: 'stopped' as const,
-    type: 'worker' as const,
-    description: 'No description available',
-    config: {},
-  };
+  // Fetch agent data
+  const fetchAgent = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}`);
 
-  const TypeIcon = typeIcons[agent.type] || Bot;
-  const status = statusStyles[agent.status] || statusStyles.stopped;
+      if (!response.ok) {
+        const errorData: ApiErrorResponse = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data: AgentDetailResponse = await response.json();
+      setAgent(data.agent);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch agent');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [agentId]);
+
+  // Initial fetch and polling
+  useEffect(() => {
+    fetchAgent();
+
+    // Poll for status updates every 3 seconds
+    const interval = setInterval(fetchAgent, 3000);
+    return () => clearInterval(interval);
+  }, [fetchAgent]);
 
   // Handle agent control actions
   const handleAction = async (action: 'start' | 'stop' | 'restart') => {
+    if (!agent) return;
+
     setActionLoading(action);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      if (action === 'restart') {
+        // Restart = stop then start
+        await fetch(`/api/agents/${encodeURIComponent(agentId)}/stop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
 
-    // In production, this would call an API endpoint
-    console.log(`Agent ${agentId}: ${action}`);
+        // Wait a moment for the process to stop
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-    setActionLoading(null);
+        await fetch(`/api/agents/${encodeURIComponent(agentId)}/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+        toast.success('Agent restarted', {
+          description: `${agent.name} has been restarted`,
+        });
+      } else {
+        const endpoint = action === 'start' ? 'start' : 'stop';
+        const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+        if (!response.ok) {
+          const errorData: ApiErrorResponse = await response.json();
+          throw new Error(errorData.error || `Failed to ${action} agent`);
+        }
+
+        toast.success(`Agent ${action}${action === 'stop' ? 'ped' : 'ed'}`, {
+          description: `${agent.name} has been ${action}${action === 'stop' ? 'ped' : 'ed'}`,
+        });
+      }
+
+      // Refresh agent data
+      await fetchAgent();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Failed to ${action} agent`;
+      toast.error(`Failed to ${action} agent`, { description: message });
+      console.error(`Failed to ${action} agent:`, err);
+      setError(message);
+    } finally {
+      setActionLoading(null);
+    }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container py-6 space-y-6">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-lg" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card shadow-sm h-[400px]">
+          <Skeleton className="h-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !agent) {
+    return (
+      <div className="container py-6">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div className="p-6">
+            <div className="flex flex-col items-center justify-center py-8 gap-4">
+              <AlertCircle className="h-10 w-10 text-destructive" />
+              <div className="text-center">
+                <p className="font-medium text-destructive">Failed to load agent</p>
+                <p className="text-sm text-muted-foreground mt-1">{error}</p>
+              </div>
+              <Button onClick={fetchAgent} variant="outline" className="gap-2">
+                <RotateCw className="h-4 w-4" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!agent) return null;
+
+  const TypeIcon = getTypeIcon(agentId);
+  const status = statusStyles[agent.status] || statusStyles.stopped;
+  const canStart = agent.status === 'stopped' && agent.enabled;
+  const canStop = agent.status === 'running' || agent.status === 'starting';
 
   return (
     <div className="container py-6 space-y-6">
@@ -156,10 +236,13 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
                     <span className={cn('h-1.5 w-1.5 rounded-full', status.dot)} />
                     {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
                   </span>
+                  {!agent.enabled && (
+                    <span className="text-xs text-muted-foreground">(Disabled)</span>
+                  )}
                 </div>
                 <p className="text-muted-foreground">{agent.description}</p>
                 <p className="text-sm text-muted-foreground">
-                  Type: <span className="font-medium capitalize">{agent.type}</span>
+                  Command: <code className="rounded bg-muted px-1 py-0.5 text-xs">{agent.command} {agent.args.join(' ')}</code>
                   <span className="mx-2">|</span>
                   ID: <code className="rounded bg-muted px-1 py-0.5 text-xs">{agentId}</code>
                 </p>
@@ -172,11 +255,11 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleAction('start')}
-                disabled={agent.status === 'running' || actionLoading !== null}
+                disabled={!canStart || actionLoading !== null}
                 className="gap-2"
               >
                 {actionLoading === 'start' ? (
-                  <RotateCw className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
@@ -187,11 +270,11 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleAction('stop')}
-                disabled={agent.status === 'stopped' || actionLoading !== null}
+                disabled={!canStop || actionLoading !== null}
                 className="gap-2"
               >
                 {actionLoading === 'stop' ? (
-                  <RotateCw className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Square className="h-4 w-4" />
                 )}
@@ -202,11 +285,11 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleAction('restart')}
-                disabled={agent.status === 'stopped' || actionLoading !== null}
+                disabled={!canStop || actionLoading !== null}
                 className="gap-2"
               >
                 {actionLoading === 'restart' ? (
-                  <RotateCw className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <RotateCw className="h-4 w-4" />
                 )}
@@ -216,6 +299,22 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Error banner for action failures */}
+      {error && agent && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-auto text-xs underline hover:no-underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Live Terminal Output Panel */}
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -241,7 +340,7 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
             <div>
               <h2 className="text-lg font-semibold">Configuration</h2>
               <p className="text-sm text-muted-foreground">
-                Agent settings and parameters
+                Agent settings and features
               </p>
             </div>
           </div>
@@ -255,39 +354,94 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
         {configOpen && (
           <div className="border-t p-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(agent.config).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="rounded-lg border bg-muted/30 p-3 space-y-1"
-                >
+              {/* Features */}
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Parallel Execution
+                </label>
+                <div className="font-mono text-sm">
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                      agent.features.parallelExecution
+                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                        : 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+                    )}
+                  >
+                    {agent.features.parallelExecution ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Autonomous Mode
+                </label>
+                <div className="font-mono text-sm">
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                      agent.features.autonomousMode
+                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                        : 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+                    )}
+                  >
+                    {agent.features.autonomousMode ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Git Integration
+                </label>
+                <div className="font-mono text-sm">
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                      agent.features.gitIntegration
+                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                        : 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+                    )}
+                  >
+                    {agent.features.gitIntegration ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              {agent.features.mcpSupport !== undefined && (
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                    MCP Support
                   </label>
                   <div className="font-mono text-sm">
-                    {typeof value === 'boolean' ? (
-                      <span
-                        className={cn(
-                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                          value
-                            ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                            : 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
-                        )}
-                      >
-                        {value ? 'Enabled' : 'Disabled'}
-                      </span>
-                    ) : (
-                      <code className="text-foreground">{String(value)}</code>
-                    )}
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        agent.features.mcpSupport
+                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                          : 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+                      )}
+                    >
+                      {agent.features.mcpSupport ? 'Enabled' : 'Disabled'}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
 
-            <div className="mt-4 pt-4 border-t flex justify-end gap-2">
-              <Button variant="outline" size="sm">
-                Reset to Defaults
-              </Button>
-              <Button size="sm">Save Changes</Button>
+              {/* Environment Variables Required */}
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-1 md:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Required Environment Variables
+                </label>
+                <div className="font-mono text-sm flex flex-wrap gap-2">
+                  {agent.envRequired.map((env) => (
+                    <code key={env} className="rounded bg-muted px-2 py-0.5 text-xs">
+                      {env}
+                    </code>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

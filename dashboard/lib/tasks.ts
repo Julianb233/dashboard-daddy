@@ -8,7 +8,7 @@ import {
   Agent,
 } from '@/types/task';
 
-const VIBE_KANBAN_URL = process.env.NEXT_PUBLIC_VIBE_KANBAN_URL || 'http://localhost:3000';
+// const VIBE_KANBAN_URL = process.env.NEXT_PUBLIC_VIBE_KANBAN_URL || 'http://localhost:3000';
 
 // Mock data for development
 const mockAgents: Agent[] = [

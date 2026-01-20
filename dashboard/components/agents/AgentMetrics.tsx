@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import {
   Card,
@@ -21,7 +20,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import type { AgentPerformanceData } from '@/types/agent';
 import { getAggregatedMetrics } from '@/lib/agents';
 import { cn } from '@/lib/utils';

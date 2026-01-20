@@ -15,7 +15,7 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'er
 export interface UseAgentStreamOptions {
   agentId: string;
   autoConnect?: boolean;
-  maxMessages?: number;
+  maxMessages?: number; // 0 or undefined = unlimited
   reconnectDelay?: number;
   maxReconnectAttempts?: number;
 }
@@ -38,7 +38,7 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
   const {
     agentId,
     autoConnect = true,
-    maxMessages = 1000,
+    maxMessages = 0, // 0 = unlimited (per user preference)
     reconnectDelay = 2000,
     maxReconnectAttempts = 5,
   } = options;
@@ -116,8 +116,8 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
 
           setMessages((prev) => {
             const updated = [...prev, message];
-            // Limit the number of messages kept in state
-            if (updated.length > maxMessages) {
+            // Limit the number of messages kept in state (0 = unlimited)
+            if (maxMessages > 0 && updated.length > maxMessages) {
               return updated.slice(-maxMessages);
             }
             return updated;

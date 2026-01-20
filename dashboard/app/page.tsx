@@ -1,62 +1,38 @@
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatsCard, ActivityFeed, type ActivityItem } from "@/components/dashboard";
+import { DashboardStatsClient, ActivityFeed, type ActivityItem } from "@/components/dashboard";
 import {
-  Bot,
-  CheckCircle2,
-  FolderKanban,
   Play,
   Eye,
   FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
 
-// Mock data for the activity feed
-const mockActivities: ActivityItem[] = [
+// Activity feed showing recent agent actions (will be wired to real data in future phase)
+const recentActivities: ActivityItem[] = [
   {
     id: "1",
     timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    agentName: "Code Review Agent",
-    action: "Completed PR review for feature/auth-improvements",
+    agentName: "Claude Code",
+    action: "Ready for tasks",
     status: "completed",
   },
   {
     id: "2",
     timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    agentName: "Test Runner Agent",
-    action: "Running test suite for main branch",
-    status: "running",
-  },
-  {
-    id: "3",
-    timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    agentName: "Documentation Agent",
-    action: "Generated API documentation for v2.1.0",
+    agentName: "Gemini CLI",
+    action: "Configured and available",
     status: "completed",
   },
   {
-    id: "4",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    agentName: "Deploy Agent",
-    action: "Deployment to staging environment",
-    status: "failed",
-  },
-  {
-    id: "5",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    agentName: "Security Scanner",
-    action: "Waiting for dependency scan results",
-    status: "pending",
+    id: "3",
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    agentName: "OpenAI Codex",
+    action: "Configured and available",
+    status: "completed",
   },
 ];
-
-// Mock stats data
-const mockStats = {
-  activeAgents: 3,
-  tasksCompleted: 12,
-  projects: 5,
-};
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -78,33 +54,14 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatsCard
-            icon={Bot}
-            label="Active Agents"
-            value={mockStats.activeAgents}
-            trend={{ value: 15, direction: "up" }}
-          />
-          <StatsCard
-            icon={CheckCircle2}
-            label="Tasks Completed"
-            value={mockStats.tasksCompleted}
-            trend={{ value: 8, direction: "up" }}
-          />
-          <StatsCard
-            icon={FolderKanban}
-            label="Projects"
-            value={mockStats.projects}
-            trend={{ value: 0, direction: "neutral" }}
-          />
-        </div>
+        {/* Quick Stats Cards - Real-time data from APIs */}
+        <DashboardStatsClient />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Activity Feed - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
-            <ActivityFeed activities={mockActivities} />
+            <ActivityFeed activities={recentActivities} />
           </div>
 
           {/* Quick Actions Sidebar */}

@@ -9,7 +9,7 @@ import {
 } from '@hello-pangea/dnd';
 import { TaskCard } from './TaskCard';
 import { TaskFilters } from './TaskFilters';
-import { Task, TaskBoard as TaskBoardType, TaskFiltersState, TaskStatus } from '@/types/task';
+import { TaskBoard as TaskBoardType, TaskFiltersState, TaskStatus } from '@/types/task';
 import { fetchTaskBoard, moveTask } from '@/lib/tasks';
 
 export function TaskBoard() {

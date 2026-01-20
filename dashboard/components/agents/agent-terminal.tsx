@@ -182,7 +182,7 @@ function TerminalLine({ message }: { message: AgentMessage }) {
 export default function AgentTerminal({
   agentId,
   className = '',
-  maxLines = 1000,
+  maxLines = 0, // 0 = unlimited (per user preference for full history)
 }: AgentTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -311,8 +311,8 @@ export default function AgentTerminal({
       {/* Status bar */}
       <div className="flex items-center justify-between px-4 py-1.5 bg-[#161b22] border-t border-gray-800 text-xs text-gray-500">
         <div className="flex items-center gap-4">
-          <span>Lines: {messages.length}</span>
-          {messages.length >= maxLines && (
+          <span>Lines: {messages.length.toLocaleString()}</span>
+          {maxLines > 0 && messages.length >= maxLines && (
             <span className="text-yellow-500">Buffer full (oldest lines removed)</span>
           )}
         </div>
