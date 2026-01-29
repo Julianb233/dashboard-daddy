@@ -1,51 +1,90 @@
 'use client';
 
 import { useState } from 'react';
-import { Circle } from 'lucide-react';
+import { Circle, BarChart3, AlertTriangle, Kanban, Home, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const navigationItems = [
+  { href: '/', icon: Home, label: 'Dashboard' },
+  { href: '/kanban', icon: Kanban, label: 'Kanban Board' },
+  { href: '/usage', icon: BarChart3, label: 'Usage & Costs' },
+  { href: '/errors', icon: AlertTriangle, label: 'Error Analysis' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
+];
 
 export function BubbaSidebar() {
   const [status, setStatus] = useState<'Online' | 'Idle'>('Online');
+  const pathname = usePathname();
 
   return (
-    <aside className="w-80 bg-gray-900 border-r border-gray-800 h-screen p-6">
-      {/* Agent Avatar and Info */}
-      <div className="text-center mb-8">
-        <div className="text-6xl mb-4">🫡</div>
-        <h2 className="text-xl font-semibold text-blue-400 mb-2">Bubba</h2>
-        <p className="text-sm text-gray-400">Personal Assistant Agent</p>
+    <aside className="w-80 bg-gray-900 border-r border-gray-800 h-screen flex flex-col">
+      <div className="p-6">
+        {/* Agent Avatar and Info */}
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🫡</div>
+          <h2 className="text-xl font-semibold text-blue-400 mb-2">Bubba</h2>
+          <p className="text-sm text-gray-400">Personal Assistant Agent</p>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium">Status</span>
+            <select 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value as 'Online' | 'Idle')}
+              className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
+            >
+              <option value="Online">Online</option>
+              <option value="Idle">Idle</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2 mb-3">
+            <Circle 
+              size={12} 
+              className={`fill-current ${status === 'Online' ? 'text-green-400' : 'text-yellow-400'}`} 
+            />
+            <span className={`text-sm font-medium ${status === 'Online' ? 'text-green-400' : 'text-yellow-400'}`}>
+              {status}
+            </span>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-3 text-center">
+            <p className="text-green-400 text-sm font-medium">Ready for tasks</p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="mb-8">
+          <h3 className="text-sm font-medium text-gray-400 mb-3">Navigation</h3>
+          <nav className="space-y-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
 
-      {/* Status Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium">Status</span>
-          <select 
-            value={status} 
-            onChange={(e) => setStatus(e.target.value as 'Online' | 'Idle')}
-            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
-          >
-            <option value="Online">Online</option>
-            <option value="Idle">Idle</option>
-          </select>
-        </div>
-        
-        <div className="flex items-center gap-2 mb-3">
-          <Circle 
-            size={12} 
-            className={`fill-current ${status === 'Online' ? 'text-green-400' : 'text-yellow-400'}`} 
-          />
-          <span className={`text-sm font-medium ${status === 'Online' ? 'text-green-400' : 'text-yellow-400'}`}>
-            {status}
-          </span>
-        </div>
-        
-        <div className="bg-gray-800 rounded-lg p-3 text-center">
-          <p className="text-green-400 text-sm font-medium">Ready for tasks</p>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="space-y-4">
+      {/* Quick Stats - Fixed at bottom */}
+      <div className="mt-auto p-6 space-y-4">
         <div className="bg-gray-800 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-400 mb-3">Today's Activity</h3>
           <div className="space-y-2">

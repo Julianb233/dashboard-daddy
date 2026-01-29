@@ -150,6 +150,7 @@ export function KanbanBoard() {
                             key={task.id}
                             task={task}
                             color={column.color}
+                            columnId={column.id}
                           />
                         ))}
                       </div>

@@ -4,3 +4,5 @@ export { TaskCard } from './TaskCard';
 export { BubbaHeader } from './BubbaHeader';
 export { BubbaSidebar } from './BubbaSidebar';
 export { DeliverablesSection } from './DeliverablesSection';
+export { NotesForBubba } from './NotesForBubba';
+export { ActionLog } from './ActionLog';
