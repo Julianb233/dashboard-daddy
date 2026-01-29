@@ -196,3 +196,17 @@ docker compose up -d
 ## License
 
 MIT License - Use freely for personal and commercial projects.
+
+---
+
+## 🤖 Multi-Agent Integration
+
+Dashboard Daddy supports multiple AI agents working together through a shared memory system.
+
+See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for:
+- Triple storage architecture (Local/Pinecone/Supabase)
+- Context generation protocol
+- Agent communication/handoff format
+- Code examples for reading and writing shared context
+
+This enables Claude Code, Bubba, and other agents to collaborate on tasks with full context awareness.
