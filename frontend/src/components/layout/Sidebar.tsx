@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Bot, ListTodo, Settings, Terminal } from 'lucide-react';
+import { Home, Bot, ListTodo, Settings, Terminal, Kanban } from 'lucide-react';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/agents', icon: Bot, label: 'Agents' },
+  { href: '/kanban', icon: Kanban, label: 'Kanban' },
   { href: '/tasks', icon: ListTodo, label: 'Tasks' },
   { href: '/terminal', icon: Terminal, label: 'Terminal' },
   { href: '/settings', icon: Settings, label: 'Settings' },
