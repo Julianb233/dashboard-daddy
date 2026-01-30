@@ -25,19 +25,29 @@ export async function GET(request: Request) {
   }
   
   // Format tasks for frontend
-  const formattedTasks = (tasks || []).map(task => ({
-    id: task.id,
-    title: task.name || 'Unnamed task',
-    description: task.description,
-    status: task.status || 'pending',
-    priority: task.priority || 'medium',
-    assignedAgent: task.assigned_agent || 'system',
-    createdAt: task.created_at,
-    updatedAt: task.updated_at,
-    dueDate: task.due_date,
-    completedAt: task.completed_at,
-    result: task.result
-  }))
+  const formattedTasks = (tasks || []).map(task => {
+    // Use name, or extract title from description, or fallback
+    let title = task.name
+    if (!title || title === 'Unnamed task') {
+      // Use first line of description as title
+      title = task.description?.split('\n')[0]?.slice(0, 60) || 'Untitled Task'
+    }
+    
+    return {
+      id: task.id,
+      title,
+      description: task.description,
+      status: task.status || 'pending',
+      priority: task.priority || 'medium',
+      category: task.category || 'general',
+      assignedAgent: task.assigned_agent || 'system',
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      dueDate: task.due_date,
+      completedAt: task.completed_at,
+      result: task.result
+    }
+  })
   
   return NextResponse.json(formattedTasks, {
     headers: {
