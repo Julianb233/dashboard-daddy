@@ -1,13 +1,72 @@
 @import "tailwindcss";
 
-/* Wizard of AI Theme */
+/* ============================================
+   Wizard of AI Design Framework
+   Based on: https://www.thewizzardof.ai/
+   ============================================ */
+
 :root {
-  --background: #041f1a;
-  --foreground: #FDF8E8;
-  --primary: #0A4D3C;
-  --secondary: #D4A84B;
-  --accent: #E8C55A;
-  --muted: #0D6B4F;
+  /* Emerald Greens - Primary Brand Colors */
+  --emerald-900: #0a4d3c;
+  --emerald-800: #0d6b4f;
+  --emerald-700: #1a8b6b;
+  --emerald-600: #2aad8a;
+
+  /* Golds - Accent Colors */
+  --gold-600: #8b6914;
+  --gold-500: #d4a84b;
+  --gold-400: #e8c55a;
+  --gold-300: #f0d98c;
+
+  /* Supporting Colors */
+  --teal: #1e5f74;
+  --coral: #e07a5f;
+  --cream: #fdf8e8;
+  --navy: #1a2f4a;
+
+  /* Semantic Tokens */
+  --background: var(--emerald-900);
+  --foreground: var(--cream);
+  --card: var(--emerald-800);
+  --card-foreground: var(--cream);
+  --primary: var(--gold-500);
+  --primary-foreground: var(--emerald-900);
+  --secondary: var(--emerald-700);
+  --secondary-foreground: var(--cream);
+  --muted: var(--emerald-800);
+  --muted-foreground: var(--gold-300);
+  --accent: var(--coral);
+  --accent-foreground: var(--cream);
+  --destructive: var(--coral);
+  --destructive-foreground: var(--cream);
+  --border: var(--emerald-700);
+  --input: var(--emerald-800);
+  --ring: var(--gold-500);
+
+  /* Chart Colors */
+  --chart-1: var(--gold-500);
+  --chart-2: var(--emerald-700);
+  --chart-3: var(--gold-400);
+  --chart-4: var(--emerald-800);
+  --chart-5: var(--gold-600);
+
+  /* Sidebar */
+  --sidebar: var(--emerald-800);
+  --sidebar-foreground: var(--cream);
+  --sidebar-primary: var(--gold-500);
+  --sidebar-primary-foreground: var(--emerald-900);
+  --sidebar-accent: var(--gold-400);
+  --sidebar-border: var(--emerald-700);
+
+  /* Status Colors */
+  --status-success: var(--emerald-600);
+  --status-warning: var(--gold-500);
+  --status-error: var(--coral);
+  --status-info: var(--teal);
+  --status-idle: var(--emerald-700);
+
+  /* Border Radius */
+  --radius: 0.75rem;
 }
 
 body {
