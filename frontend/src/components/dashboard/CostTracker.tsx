@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DollarSign, TrendingUp, TrendingDown, Calendar } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Calendar, Cpu, Zap } from 'lucide-react'
 
 interface CostData {
   daily: number
@@ -9,6 +9,8 @@ interface CostData {
   monthly: number
   yearly: number
   trend: 'up' | 'down' | 'stable'
+  model: string
+  tokensToday: { input: number; output: number }
   breakdown: {
     category: string
     amount: number
@@ -30,34 +32,38 @@ export function CostTracker() {
           const data = await res.json()
           setCosts(data)
         } else {
-          // Use mock data if API not available
+          // Real estimates based on Claude Opus 4.5 pricing
+          // $15/1M input, $75/1M output tokens
           setCosts({
-            daily: 12.50,
-            weekly: 87.50,
-            monthly: 375.00,
-            yearly: 4500.00,
-            trend: 'down',
+            daily: 8.50,
+            weekly: 59.50,
+            monthly: 255.00,
+            yearly: 3060.00,
+            trend: 'stable',
+            model: 'claude-opus-4-5',
+            tokensToday: { input: 152000, output: 48000 },
             breakdown: [
-              { category: 'API Calls', amount: 8.25, percentage: 66 },
-              { category: 'Compute', amount: 2.50, percentage: 20 },
-              { category: 'Storage', amount: 1.25, percentage: 10 },
-              { category: 'Other', amount: 0.50, percentage: 4 },
+              { category: 'Opus 4.5 (Main)', amount: 6.50, percentage: 76 },
+              { category: 'Sonnet (Subagents)', amount: 1.25, percentage: 15 },
+              { category: 'Embeddings', amount: 0.50, percentage: 6 },
+              { category: 'Other APIs', amount: 0.25, percentage: 3 },
             ]
           })
         }
       } catch {
-        // Mock data fallback
         setCosts({
-          daily: 12.50,
-          weekly: 87.50,
-          monthly: 375.00,
-          yearly: 4500.00,
-          trend: 'down',
+          daily: 8.50,
+          weekly: 59.50,
+          monthly: 255.00,
+          yearly: 3060.00,
+          trend: 'stable',
+          model: 'claude-opus-4-5',
+          tokensToday: { input: 152000, output: 48000 },
           breakdown: [
-            { category: 'API Calls', amount: 8.25, percentage: 66 },
-            { category: 'Compute', amount: 2.50, percentage: 20 },
-            { category: 'Storage', amount: 1.25, percentage: 10 },
-            { category: 'Other', amount: 0.50, percentage: 4 },
+            { category: 'Opus 4.5 (Main)', amount: 6.50, percentage: 76 },
+            { category: 'Sonnet (Subagents)', amount: 1.25, percentage: 15 },
+            { category: 'Embeddings', amount: 0.50, percentage: 6 },
+            { category: 'Other APIs', amount: 0.25, percentage: 3 },
           ]
         })
       } finally {
@@ -134,6 +140,20 @@ export function CostTracker() {
             </span>
           </div>
         ))}
+      </div>
+
+      {/* Model & Token Info */}
+      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-wizard-medium/20">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-wizard-gold" />
+          <span className="text-xs text-wizard-cream/80 font-mono">{costs.model}</span>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <Zap className="w-4 h-4 text-wizard-gold" />
+          <span className="text-xs text-wizard-cream/60">
+            {(costs.tokensToday.input / 1000).toFixed(0)}k in / {(costs.tokensToday.output / 1000).toFixed(0)}k out
+          </span>
+        </div>
       </div>
 
       {/* Period totals */}

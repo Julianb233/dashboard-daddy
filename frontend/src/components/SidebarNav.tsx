@@ -7,6 +7,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'D' },
   { name: 'Agent Army', href: '/agents/army', icon: '👑' },
   { name: 'Agents', href: '/agents', icon: 'A' },
+  { name: 'Contacts', href: '/contacts', icon: '🧠' },
   { name: 'Tasks', href: '/tasks', icon: 'T' },
   { name: 'Activity Log', href: '/activity', icon: '📋' },
   { name: 'Approvals', href: '/approvals', icon: '✓' },
