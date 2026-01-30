@@ -17,8 +17,18 @@ interface Task {
   result?: string;
 }
 
+// Track total counts for stats (not affected by filter)
+interface TaskStats {
+  total: number;
+  pending: number;
+  active: number;
+  completed: number;
+  failed: number;
+}
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskStats, setTaskStats] = useState<TaskStats>({ total: 0, pending: 0, active: 0, completed: 0, failed: 0 });
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,27 +39,55 @@ export default function TasksPage() {
     priority: 'medium' as const,
     dueDate: ''
   });
+  // Track current filter to prevent race conditions
+  const [currentFilter, setCurrentFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchTasks();
   }, [filter]);
 
   async function fetchTasks() {
+    const filterAtStart = filter; // Capture filter at request start
     try {
       setLoading(true);
-      const url = filter === 'all' ? '/api/tasks' : `/api/tasks?status=${filter}`;
-      const response = await fetch(url);
       
-      if (!response.ok) {
+      // Fetch filtered tasks and total stats in parallel
+      const [tasksResponse, statsResponse] = await Promise.all([
+        fetch(filter === 'all' ? '/api/tasks' : `/api/tasks?status=${filter}`),
+        fetch('/api/tasks') // Get all tasks for stats
+      ]);
+      
+      if (!tasksResponse.ok) {
         throw new Error('Failed to fetch tasks');
       }
       
-      const data = await response.json();
+      // Only update if filter hasn't changed (prevents race condition)
+      if (filterAtStart !== filter) {
+        return; // Stale request, ignore results
+      }
+      
+      const data = await tasksResponse.json();
       setTasks(data);
+      
+      // Update stats from unfiltered data
+      if (statsResponse.ok) {
+        const allTasks: Task[] = await statsResponse.json();
+        setTaskStats({
+          total: allTasks.length,
+          pending: allTasks.filter(t => t.status === 'pending').length,
+          active: allTasks.filter(t => t.status === 'active').length,
+          completed: allTasks.filter(t => t.status === 'completed').length,
+          failed: allTasks.filter(t => t.status === 'failed').length,
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      if (filterAtStart === filter) { // Only set error if still relevant
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
     } finally {
-      setLoading(false);
+      if (filterAtStart === filter) {
+        setLoading(false);
+      }
     }
   }
 
@@ -330,29 +368,23 @@ export default function TasksPage() {
           </div>
         </div>
 
-        {/* Stats Summary */}
+        {/* Stats Summary - uses taskStats for accurate counts regardless of filter */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-sm font-medium text-gray-500">Total Tasks</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{tasks.length}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{taskStats.total}</p>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-sm font-medium text-gray-500">Pending</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
-              {tasks.filter(t => t.status === 'pending').length}
-            </p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{taskStats.pending}</p>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-sm font-medium text-gray-500">Active</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
-              {tasks.filter(t => t.status === 'active').length}
-            </p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{taskStats.active}</p>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-sm font-medium text-gray-500">Completed</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
-              {tasks.filter(t => t.status === 'completed').length}
-            </p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{taskStats.completed}</p>
           </div>
         </div>
       </div>

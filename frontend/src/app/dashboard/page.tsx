@@ -37,18 +37,28 @@ export default function DashboardPage() {
           fetch('/api/activity?limit=10')
         ]);
         
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
+        // Handle stats response - throw error if not ok
+        if (!statsRes.ok) {
+          const errorText = await statsRes.text().catch(() => 'Unknown error');
+          throw new Error(`Failed to fetch stats: ${statsRes.status} ${errorText}`);
         }
+        const statsData = await statsRes.json();
+        setStats(statsData);
         
-        if (activityRes.ok) {
-          const activityData = await activityRes.json();
-          setActivity(activityData.items || []);
+        // Handle activity response - throw error if not ok
+        if (!activityRes.ok) {
+          const errorText = await activityRes.text().catch(() => 'Unknown error');
+          throw new Error(`Failed to fetch activity: ${activityRes.status} ${errorText}`);
         }
+        const activityData = await activityRes.json();
+        setActivity(activityData.items || []);
+        
+        // Clear any previous errors on successful fetch
+        setError(null);
       } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error(err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+        setError(errorMessage);
+        console.error('Dashboard fetch error:', err);
       } finally {
         setLoading(false);
       }
