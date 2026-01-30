@@ -159,7 +159,7 @@ export default function TasksPage() {
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
       case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'active': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'active': return 'bg-wizard-medium/20 text-wizard-gold border-wizard-gold/30';
       case 'failed': return 'bg-red-500/20 text-red-400 border-red-500/30';
       default: return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     }
@@ -170,7 +170,7 @@ export default function TasksPage() {
       case 'critical': return 'bg-red-500/20 text-red-400';
       case 'high': return 'bg-orange-500/20 text-orange-400';
       case 'medium': return 'bg-yellow-500/20 text-yellow-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-gray-500/20 text-wizard-cream/60';
     }
   };
 
@@ -204,10 +204,10 @@ export default function TasksPage() {
         </div>
         
         {task.description && (
-          <p className="text-sm text-gray-400 mb-2 line-clamp-2">{task.description}</p>
+          <p className="text-sm text-wizard-cream/60 mb-2 line-clamp-2">{task.description}</p>
         )}
         
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-wizard-cream/50">
           <div className="flex items-center gap-3">
             <span className={`px-2 py-0.5 rounded ${getPriorityColor(task.priority)}`}>
               {task.priority}
@@ -218,7 +218,7 @@ export default function TasksPage() {
         </div>
         
         {/* Swipe hint */}
-        <div className="mt-2 text-xs text-gray-600 text-center">
+        <div className="mt-2 text-xs text-wizard-cream/40 text-center">
           ← Swipe to delete | Swipe to complete →
         </div>
       </div>
@@ -240,10 +240,10 @@ export default function TasksPage() {
         <div className="py-4">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-wizard-gold" />
             </div>
           ) : tasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-wizard-cream/50 py-8">
               <p>No tasks yet</p>
               <p className="text-sm mt-1">Swipe cards to complete or delete</p>
             </div>
@@ -261,7 +261,7 @@ export default function TasksPage() {
       content: (
         <div className="py-4">
           {pendingTasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No pending tasks</div>
+            <div className="text-center text-wizard-cream/50 py-8">No pending tasks</div>
           ) : (
             pendingTasks.map(task => <TaskCard key={task.id} task={task} />)
           )}
@@ -276,7 +276,7 @@ export default function TasksPage() {
       content: (
         <div className="py-4">
           {activeTasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No active tasks</div>
+            <div className="text-center text-wizard-cream/50 py-8">No active tasks</div>
           ) : (
             activeTasks.map(task => <TaskCard key={task.id} task={task} />)
           )}
@@ -291,7 +291,7 @@ export default function TasksPage() {
       content: (
         <div className="py-4">
           {completedTasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No completed tasks</div>
+            <div className="text-center text-wizard-cream/50 py-8">No completed tasks</div>
           ) : (
             completedTasks.map(task => <TaskCard key={task.id} task={task} />)
           )}
@@ -308,7 +308,7 @@ export default function TasksPage() {
           <h1 className="text-2xl font-bold text-white">Tasks</h1>
           <button 
             onClick={() => setShowNewTask(true)}
-            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-wizard-gold text-white p-2 rounded-lg hover:bg-wizard-gold-light transition-colors"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -375,22 +375,22 @@ export default function TasksPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Title *</label>
+              <label className="block text-sm font-medium text-wizard-cream/80 mb-1">Title *</label>
               <input
                 type="text"
                 value={newTask.title}
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-wizard-dark border border-wizard-medium/30 rounded-lg text-white placeholder-wizard-cream/40 focus:border-wizard-gold focus:ring-1 focus:ring-wizard-gold"
                 placeholder="Task title"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+              <label className="block text-sm font-medium text-wizard-cream/80 mb-1">Description</label>
               <textarea
                 value={newTask.description}
                 onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-wizard-dark border border-wizard-medium/30 rounded-lg text-white placeholder-wizard-cream/40 focus:border-wizard-gold focus:ring-1 focus:ring-wizard-gold"
                 rows={3}
                 placeholder="Task description"
               />
@@ -398,11 +398,11 @@ export default function TasksPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Priority</label>
+                <label className="block text-sm font-medium text-wizard-cream/80 mb-1">Priority</label>
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({...newTask, priority: e.target.value as any})}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-wizard-dark border border-wizard-medium/30 rounded-lg text-white focus:border-wizard-gold"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -412,12 +412,12 @@ export default function TasksPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-wizard-cream/80 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-wizard-dark border border-wizard-medium/30 rounded-lg text-white focus:border-wizard-gold"
                 />
               </div>
             </div>
@@ -425,7 +425,7 @@ export default function TasksPage() {
             <button
               onClick={createTask}
               disabled={!newTask.title.trim()}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="w-full bg-wizard-gold text-white py-3 rounded-lg hover:bg-wizard-gold-light disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               Create Task
             </button>

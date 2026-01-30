@@ -140,7 +140,7 @@ export function SwipeableCard({
           <div
             ref={cardRef}
             {...handlers}
-            className="relative bg-gray-800 cursor-grab active:cursor-grabbing"
+            className="relative bg-wizard-dark cursor-grab active:cursor-grabbing"
             style={{
               transform: `translateX(${offset}px)`,
               transition: isSwiping ? 'none' : 'transform 0.2s ease-out',
@@ -202,7 +202,7 @@ export const SwipeableArchiveCard = ({
     className={className}
     rightAction={{
       icon: <Archive className="w-5 h-5" />,
-      color: 'bg-blue-500',
+      color: 'bg-wizard-gold',
       label: 'Archive',
       onAction: onArchive || (() => {}),
     }}

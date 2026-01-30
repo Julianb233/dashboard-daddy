@@ -125,7 +125,7 @@ export function SwipeableBottomSheet({
               duration: isDragging ? 0 : 0.3,
               bounce: 0.2,
             }}
-            className="fixed bottom-0 left-0 right-0 bg-gray-900 rounded-t-3xl z-50 flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-wizard-emerald rounded-t-3xl z-50 flex flex-col"
             style={{ 
               height: '100vh',
               touchAction: 'none',
@@ -137,22 +137,22 @@ export function SwipeableBottomSheet({
               className="flex-shrink-0 pt-3 pb-2 cursor-grab active:cursor-grabbing"
             >
               {showHandle && (
-                <div className="w-12 h-1.5 bg-gray-600 rounded-full mx-auto" />
+                <div className="w-12 h-1.5 bg-wizard-medium rounded-full mx-auto" />
               )}
             </div>
 
             {/* Header */}
             {(title || showCloseButton) && (
-              <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-wizard-medium/30">
                 <h3 className="text-lg font-semibold text-white">
                   {title}
                 </h3>
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-wizard-dark rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-400" />
+                    <X className="w-5 h-5 text-wizard-cream/60" />
                   </button>
                 )}
               </div>
@@ -171,8 +171,8 @@ export function SwipeableBottomSheet({
                   onClick={() => setCurrentSnapIndex(index)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     index === currentSnapIndex
-                      ? 'bg-blue-500'
-                      : 'bg-gray-600 hover:bg-gray-500'
+                      ? 'bg-wizard-gold'
+                      : 'bg-wizard-medium hover:bg-gray-500'
                   }`}
                 />
               ))}
@@ -220,11 +220,11 @@ export function QuickActionSheet({
             className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
               action.variant === 'danger'
                 ? 'hover:bg-red-500/20 text-red-400'
-                : 'hover:bg-gray-800 text-gray-300'
+                : 'hover:bg-wizard-dark text-gray-300'
             }`}
           >
             <div className={`p-3 rounded-full ${
-              action.variant === 'danger' ? 'bg-red-500/20' : 'bg-gray-800'
+              action.variant === 'danger' ? 'bg-red-500/20' : 'bg-wizard-dark'
             }`}>
               {action.icon}
             </div>
