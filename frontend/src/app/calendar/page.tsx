@@ -19,7 +19,8 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // TODO: Implement calendar navigation with these
+  // const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     fetchEvents();
