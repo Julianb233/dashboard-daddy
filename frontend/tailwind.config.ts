@@ -10,25 +10,40 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Wizard of AI Color Palette - Exact matches from thewizzardof.ai
-        wizard: {
-          'dark-emerald': '#041f1a',      // Deepest background
-          'emerald': '#0A4D3C',           // Primary emerald
-          'medium-emerald': '#0D5A45',    // Medium emerald
-          'light-emerald': '#0D6B4F',     // Light emerald
-          'bright-emerald': '#1A8B6B',    // Bright emerald accents
-          'gold': '#D4A84B',              // Primary gold
-          'gold-light': '#E8C55A',        // Light gold
-          'gold-pale': '#F0D98C',         // Pale gold
-          'gold-bright': '#FFD700',       // Bright gold accents
-          'cream': '#FDF8E8',             // Cream text
+        // Wizard of AI Design Framework - Official Brand Colors
+        // From: https://www.thewizzardof.ai/
+        emerald: {
+          900: '#0a4d3c',  // Primary background
+          800: '#0d6b4f',  // Cards, sidebar
+          700: '#1a8b6b',  // Borders, secondary
+          600: '#2aad8a',  // Highlights, success
         },
-        // Aliases for easy use
-        primary: '#0A4D3C',
-        secondary: '#D4A84B',
-        accent: '#E8C55A',
-        background: '#041f1a',
-        foreground: '#FDF8E8',
+        gold: {
+          600: '#8b6914',  // Deep gold
+          500: '#d4a84b',  // Primary accent
+          400: '#e8c55a',  // Light accent
+          300: '#f0d98c',  // Muted accent
+        },
+        cream: '#fdf8e8',
+        coral: '#e07a5f',
+        teal: '#1e5f74',
+        navy: '#1a2f4a',
+        // Legacy wizard aliases (for compatibility)
+        wizard: {
+          'dark-emerald': '#0a4d3c',
+          'emerald': '#0d6b4f',
+          'bright-emerald': '#1a8b6b',
+          'gold': '#d4a84b',
+          'gold-light': '#e8c55a',
+          'gold-pale': '#f0d98c',
+          'cream': '#fdf8e8',
+        },
+        // Semantic aliases
+        primary: '#d4a84b',
+        secondary: '#0d6b4f',
+        accent: '#e8c55a',
+        background: '#0a4d3c',
+        foreground: '#fdf8e8',
       },
       backgroundImage: {
         'gradient-wizard': 'linear-gradient(135deg, #0A4D3C 0%, #0D6B4F 50%, #1A8B6B 100%)',
