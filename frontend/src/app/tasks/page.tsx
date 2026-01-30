@@ -1,11 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/DashboardLayout';
-import { SwipeableTaskCard } from '@/components/ui/SwipeableCard';
-import { SwipeableBottomSheet, QuickActionSheet } from '@/components/ui/SwipeableBottomSheet';
-import { SwipeableTabs } from '@/components/ui/SwipeableTabs';
 import { ListTodo, Clock, CheckCircle, XCircle, Plus, Filter, MoreVertical, Edit, Trash2, Share, Archive } from 'lucide-react';
+
+// Dynamic imports for swipeable components (client-only, avoid SSR window errors)
+const SwipeableTaskCard = dynamic(
+  () => import('@/components/ui/SwipeableCard').then(mod => mod.SwipeableTaskCard),
+  { ssr: false }
+);
+const SwipeableBottomSheet = dynamic(
+  () => import('@/components/ui/SwipeableBottomSheet').then(mod => mod.SwipeableBottomSheet),
+  { ssr: false }
+);
+const QuickActionSheet = dynamic(
+  () => import('@/components/ui/SwipeableBottomSheet').then(mod => mod.QuickActionSheet),
+  { ssr: false }
+);
+const SwipeableTabs = dynamic(
+  () => import('@/components/ui/SwipeableTabs').then(mod => mod.SwipeableTabs),
+  { ssr: false }
+);
 
 interface Task {
   id: string;

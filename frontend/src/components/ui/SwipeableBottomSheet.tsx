@@ -97,7 +97,7 @@ export function SwipeableBottomSheet({
 
   const effectiveHeight = Math.max(
     0,
-    Math.min(100, currentHeight - (dragOffset / window.innerHeight) * 100)
+    Math.min(100, currentHeight - (dragOffset / (typeof window !== 'undefined' ? window.innerHeight : 800)) * 100)
   );
 
   return (
