@@ -39,7 +39,11 @@ export async function GET(request: Request) {
     result: task.result
   }))
   
-  return NextResponse.json(formattedTasks)
+  return NextResponse.json(formattedTasks, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
+    },
+  })
 }
 
 export async function POST(request: Request) {

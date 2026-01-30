@@ -122,7 +122,11 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(hierarchy)
+    return NextResponse.json(hierarchy, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
+      },
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
